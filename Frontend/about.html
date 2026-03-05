@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="About Guna's Lathe Works & Machining - 15+ years of precision CNC lathe machining in Thingalur, Erode, Tamil Nadu.">
+<title>About Us | Guna's Lathe Works & Machining</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo"><a href="index.html">⚙ Guna's Lathe Works</a></div>
+  <form class="navbar-search" id="searchForm"><input type="text" id="searchInput" placeholder="Search products..."><button type="submit">Search</button></form>
+  <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="products.html">Products</a></li><li><a href="about.html" class="active">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="admin/index.html" id="adminNavLink" style="display:none;color:#ffa500;">Admin</a></li></ul>
+  <div class="auth-buttons">
+    <div class="cart-icon-container" id="cartIcon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span id="cartCount" class="cart-count">0</span></div>
+    <a href="login.html" class="btn-auth btn-login">Login</a><a href="signup.html" class="btn-auth btn-signup">Sign Up</a>
+    <div class="user-info" style="display:none;"><span class="welcome-text">Hi, <span id="userName"></span></span><button class="btn-logout" id="logoutBtn">Logout</button></div>
+  </div>
+  <div class="hamburger"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+</nav>
+<div class="page-content">
+<div class="breadcrumb"><a href="index.html">Home</a><span>›</span>About Us</div>
+<div class="about-page">
+  <!-- Who We Are -->
+  <div class="about-grid">
+    <div class="about-text">
+      <h2>Who We <span>Are</span></h2>
+      <p>Guna's Lathe Works & Machining is a leading precision machining and metal fabrication workshop located in Thingalur, Erode, Tamil Nadu. Founded by Mr. Gunasekar, the company has grown over 15+ years into a trusted name for high-quality lathe components, welding, and custom fabrication.</p>
+      <p>We serve industries across Erode, Coimbatore, Tiruppur, and the surrounding regions — from small workshops to large industrial factories. Our commitment to precision, quality, and customer satisfaction drives everything we do.</p>
+      <div class="about-stats">
+        <div class="about-stat"><div class="about-stat-number">500+</div><div class="about-stat-label">Projects</div></div>
+        <div class="about-stat"><div class="about-stat-number">15+</div><div class="about-stat-label">Years Exp.</div></div>
+        <div class="about-stat"><div class="about-stat-number">200+</div><div class="about-stat-label">Clients</div></div>
+      </div>
+    </div>
+    <div class="about-img"><img src="Assets/lathemachine.jpg" alt="Our Workshop" style="width:100%;height:100%;object-fit:cover;"></div>
+  </div>
+
+  <!-- Mission -->
+  <div class="section-header" style="text-align:left;margin-bottom:24px;">
+    <h2 class="section-title" style="font-size:24px;">OUR <span>MISSION</span></h2>
+  </div>
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius-lg);padding:24px;margin-bottom:48px;">
+    <p style="color:var(--text-secondary);font-size:15px;line-height:1.8;">To deliver exceptional machining and fabrication services that exceed customer expectations through precision craftsmanship, innovative solutions, and unwavering commitment to quality. We strive to be the go-to partner for all metalworking needs — from simple lathe components to complex custom manufactured parts.</p>
+  </div>
+
+  <!-- Services -->
+  <div class="section-header" style="text-align:left;margin-bottom:24px;">
+    <h2 class="section-title" style="font-size:24px;">OUR <span>SERVICES</span></h2>
+  </div>
+  <div class="services-grid" style="margin-bottom:48px;">
+    <div class="service-card">
+      <div class="service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
+      <h4 class="service-title">Lathe Machining</h4>
+      <p class="service-description">CNC and manual lathe turning, facing, threading, boring, and grooving. Tolerances up to ±0.01mm. Diameter range: 10mm–300mm, Length: up to 1500mm.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></div>
+      <h4 class="service-title">Welding Services</h4>
+      <p class="service-description">Professional MIG, TIG, and Arc welding. Materials: MS, SS, Aluminium, Cast Iron. Certified welders with visual and PT inspection on all joints.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg></div>
+      <h4 class="service-title">Custom Fabrication</h4>
+      <p class="service-description">End-to-end fabrication from design to delivery. Industrial structures, conveyor frames, machine guards, and any custom metal components per your drawings.</p>
+    </div>
+  </div>
+
+  <!-- Machinery -->
+  <div class="section-header" style="text-align:left;margin-bottom:24px;">
+    <h2 class="section-title" style="font-size:24px;">OUR <span>MACHINERY</span></h2>
+  </div>
+  <div class="machinery-grid" style="margin-bottom:48px;">
+    <div class="machinery-card"><div class="m-icon">⚙️</div><h4>CNC Lathe Machine</h4><p>3× CNC lathes, max 300mm dia, 1500mm length</p></div>
+    <div class="machinery-card"><div class="m-icon">🔧</div><h4>Manual Lathe</h4><p>2× heavy duty manual lathes for bulk production</p></div>
+    <div class="machinery-card"><div class="m-icon">⚡</div><h4>MIG Welding</h4><p>Industrial MIG welders for thick plate fabrication</p></div>
+    <div class="machinery-card"><div class="m-icon">🔥</div><h4>TIG Welding</h4><p>Precision TIG for SS, Aluminium and thin gauge work</p></div>
+    <div class="machinery-card"><div class="m-icon">📐</div><h4>Drilling Machine</h4><p>Radial and bench drilling for precision holes</p></div>
+    <div class="machinery-card"><div class="m-icon">🏗️</div><h4>Grinding Machine</h4><p>Surface and cylindrical grinding for fine finishes</p></div>
+  </div>
+
+  <!-- Workshop Images -->
+  <div class="section-header" style="text-align:left;margin-bottom:24px;">
+    <h2 class="section-title" style="font-size:24px;">WORKSHOP <span>GALLERY</span></h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:48px;">
+    <div style="border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;"><img src="Assets/lathemachine.jpg" alt="Lathe Machine" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+    <div style="border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;"><img src="Assets/welding.jpeg" alt="Welding" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+    <div style="border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;"><img src="Assets/shaft.jpg" alt="Precision Shafts" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+    <div style="border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;"><img src="Assets/cage1.jpg" alt="Cage Fabrication" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+    <div style="border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;"><img src="Assets/coupling.png" alt="Couplings" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+    <div style="border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:4/3;"><img src="Assets/ring.png" alt="Bushings" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+  </div>
+
+  <!-- CTA -->
+  <div style="text-align:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;">
+    <h3 style="font-size:22px;font-weight:800;margin-bottom:12px;">Ready to Work With Us?</h3>
+    <p style="color:var(--text-muted);margin-bottom:24px;">Contact us today for a free quote on your machining needs.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="contact.html" class="btn-primary" style="display:inline-block;">Get in Touch</a>
+      <a href="products.html" class="btn-secondary" style="display:inline-block;">Browse Products</a>
+    </div>
+  </div>
+</div>
+</div>
+<script src="config.js"></script>
+<script>
+document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); const q = document.getElementById('searchInput').value.trim(); if(q) window.location.href=`products.html?search=${encodeURIComponent(q)}`; });
+</script>
+</body>
+</html>

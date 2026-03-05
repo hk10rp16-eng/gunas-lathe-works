@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Details | Guna's Lathe Works</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo"><a href="index.html">⚙ Guna's Lathe Works</a></div>
+  <form class="navbar-search" id="searchForm"><input type="text" id="searchInput" placeholder="Search products..."><button type="submit">Search</button></form>
+  <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="products.html" class="active">Products</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="admin/index.html" id="adminNavLink" style="display:none;color:#ffa500;">Admin</a></li></ul>
+  <div class="auth-buttons">
+    <div class="cart-icon-container" id="cartIcon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span id="cartCount" class="cart-count">0</span></div>
+    <a href="login.html" class="btn-auth btn-login">Login</a><a href="signup.html" class="btn-auth btn-signup">Sign Up</a>
+    <div class="user-info" style="display:none;"><span class="welcome-text">Hi, <span id="userName"></span></span><button class="btn-logout" id="logoutBtn">Logout</button></div>
+  </div>
+  <div class="hamburger"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+</nav>
+<div class="page-content">
+<div class="breadcrumb"><a href="index.html">Home</a><span>›</span><a href="products.html">Products</a><span>›</span><span id="breadcrumbName">Loading...</span></div>
+<div class="product-detail-container">
+  <div id="productContent"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  <!-- Reviews Section -->
+  <div id="reviewsSection" style="display:none;margin-top:40px;">
+    <div class="product-tabs">
+      <button class="tab-btn active" onclick="switchTab('description')">Description</button>
+      <button class="tab-btn" onclick="switchTab('specifications')">Specifications</button>
+      <button class="tab-btn" onclick="switchTab('reviews')">Reviews (<span id="reviewCount">0</span>)</button>
+    </div>
+    <div id="tabDescription" class="tab-content active"><p id="fullDescription" style="color:var(--text-secondary);line-height:1.8;font-size:15px;"></p></div>
+    <div id="tabSpecifications" class="tab-content"><table class="specs-table" id="specsTable"></table></div>
+    <div id="tabReviews" class="tab-content">
+      <div class="write-review-form" id="writeReviewForm" style="display:none;">
+        <h4 style="margin-bottom:16px;font-size:16px;">Write a Review</h4>
+        <div class="star-picker" id="starPicker">
+          <span class="star-pick" data-val="1">★</span><span class="star-pick" data-val="2">★</span><span class="star-pick" data-val="3">★</span><span class="star-pick" data-val="4">★</span><span class="star-pick" data-val="5">★</span>
+        </div>
+        <div class="form-group" style="margin-top:12px;"><label>Review Title</label><input type="text" id="reviewTitle" placeholder="Summarize your experience"></div>
+        <div class="form-group"><label>Your Review *</label><textarea id="reviewText" rows="4" placeholder="Share your experience..."></textarea></div>
+        <button class="btn-submit" id="submitReview">Submit Review</button>
+      </div>
+      <div id="loginToReview" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;text-align:center;display:none;">
+        <p style="color:var(--text-muted);margin-bottom:12px;">Login to write a review</p>
+        <a href="login.html" class="btn-primary" style="display:inline-block;font-size:13px;padding:10px 20px;">Login</a>
+      </div>
+      <div class="review-summary" id="reviewSummary" style="display:none;">
+        <div><div class="rating-big" id="avgRatingBig">0</div><div style="color:var(--text-muted);font-size:13px;margin-top:4px;" id="totalReviewCount">0 reviews</div></div>
+        <div class="rating-bars" id="ratingBars"></div>
+      </div>
+      <div id="reviewsList"></div>
+    </div>
+  </div>
+  <!-- Related Products -->
+  <div id="relatedSection" style="display:none;margin-top:48px;">
+    <div class="section-header" style="text-align:left;margin-bottom:24px;">
+      <h2 class="section-title" style="font-size:20px;">RELATED <span>PRODUCTS</span></h2>
+    </div>
+    <div class="products-grid" id="relatedGrid"></div>
+  </div>
+</div>
+</div>
+<script src="config.js"></script>
+<script>
+let productId, qty = 1, selectedRating = 0;
+const params = new URLSearchParams(window.location.search);
+productId = params.get('id');
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const tabs = ['description','specifications','reviews'];
+  document.querySelectorAll('.tab-btn')[tabs.indexOf(tab)].classList.add('active');
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+}
+
+async function loadProduct() {
+  if (!productId) { window.location.href = 'products.html'; return; }
+  try {
+    const data = await apiRequest(`${API_ENDPOINTS.products}/${productId}`);
+    const p = data.product;
+    document.title = `${p.name} | Guna's Lathe Works`;
+    document.getElementById('breadcrumbName').textContent = p.name;
+
+    // Build product detail HTML
+    document.getElementById('productContent').innerHTML = `
+      <div class="product-detail-grid">
+        <div class="product-gallery">
+          <div class="main-image"><img src="${p.images[0]||'Assets/lathemachine.jpg'}" alt="${p.name}" id="mainImg"></div>
+          ${p.images.length > 1 ? `<div class="thumbnail-strip">${p.images.map((img,i)=>`<div class="thumbnail ${i===0?'active':''}" onclick="document.getElementById('mainImg').src='${img}';document.querySelectorAll('.thumbnail').forEach(t=>t.classList.remove('active'));this.classList.add('active')"><img src="${img}" alt=""></div>`).join('')}</div>` : ''}
+        </div>
+        <div class="product-info-panel">
+          <div class="product-category">${p.category}</div>
+          <h1>${p.name}</h1>
+          <div class="product-rating">${renderStars(p.ratings.average, p.ratings.count)} <span style="font-size:13px;color:var(--text-muted);">${p.ratings.count} reviews</span></div>
+          <div class="product-price">${formatCurrency(p.price)}</div>
+          ${p.originalPrice ? `<div class="price-original">${formatCurrency(p.originalPrice)} <span style="color:var(--success);font-size:14px;">${Math.round((1-p.price/p.originalPrice)*100)}% OFF</span></div>` : ''}
+          <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:20px;">${p.shortDescription || p.description.substring(0,150)+'...'}</p>
+          <div style="margin-bottom:16px;font-size:13px;color:${p.stock>0?'var(--success)':'var(--danger)'};">
+            ${p.stock>0?`✓ In Stock (${p.stock} available)`:'✗ Out of Stock'}
+          </div>
+          <div class="quantity-selector">
+            <span style="font-size:14px;font-weight:600;margin-right:8px;">Qty:</span>
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <span class="qty-value" id="qtyDisplay">1</span>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-cart-full" onclick="handleAddToCart()">🛒 Add to Cart</button>
+            <button class="btn-buy-now" onclick="handleBuyNow()">⚡ Buy Now</button>
+          </div>
+          <div class="product-meta">
+            <p><span>Category</span><span>${p.category}</span></p>
+            <p><span>Material</span><span>${p.material || 'As per requirement'}</span></p>
+            <p><span>Stock</span><span>${p.stock > 0 ? 'Available' : 'Out of Stock'}</span></p>
+          </div>
+        </div>
+      </div>`;
+
+    // Fill tab content
+    document.getElementById('fullDescription').textContent = p.description;
+    document.getElementById('tabSpecifications').innerHTML = p.specifications && p.specifications.length > 0
+      ? `<table class="specs-table">${p.specifications.map(s=>`<tr><td>${s.key}</td><td>${s.value}</td></tr>`).join('')}</table>`
+      : '<p style="color:var(--text-muted);">No specifications available.</p>';
+    document.getElementById('reviewsSection').style.display = 'block';
+
+    // Related products
+    if (data.related && data.related.length > 0) {
+      document.getElementById('relatedSection').style.display = 'block';
+      document.getElementById('relatedGrid').innerHTML = data.related.map(r=>`
+        <div class="product-card" onclick="location.href='product-detail.html?id=${r._id}'">
+          <div class="product-image"><img src="${r.images[0]||'Assets/lathemachine.jpg'}" alt="${r.name}" loading="lazy"></div>
+          <div class="product-content">
+            <div class="product-category">${r.category}</div>
+            <h3 class="product-title">${r.name}</h3>
+            <div class="product-price"><span class="price-current">${formatCurrency(r.price)}</span></div>
+            <button class="btn-add-cart" onclick="event.stopPropagation();addToCart({id:'${r._id}',name:'${r.name}',price:${r.price},image:'${r.images[0]||'Assets/lathemachine.jpg'}',quantity:1});showToast('Added to cart!')">ADD TO CART</button>
+          </div>
+        </div>`).join('');
+    }
+
+    loadReviews();
+    // Show review form or login prompt
+    if (getAuthUser()) document.getElementById('writeReviewForm').style.display = 'block';
+    else document.getElementById('loginToReview').style.display = 'block';
+  } catch(e) {
+    document.getElementById('productContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><h3>Product not found</h3><p><a href="products.html" style="color:var(--accent);">Browse all products</a></p></div>`;
+  }
+}
+
+function changeQty(delta) {
+  qty = Math.max(1, qty + delta);
+  document.getElementById('qtyDisplay').textContent = qty;
+}
+
+function handleAddToCart() {
+  const imgEl = document.getElementById('mainImg');
+  addToCart({ id: productId, name: document.querySelector('h1')?.textContent, price: parseInt(document.querySelector('.product-price')?.textContent.replace(/[₹,]/g,'')), image: imgEl?.src || 'Assets/lathemachine.jpg', quantity: qty });
+  showToast('Added to cart!');
+}
+
+function handleBuyNow() {
+  handleAddToCart();
+  window.location.href = 'cart.html';
+}
+
+async function loadReviews() {
+  try {
+    const data = await apiRequest(`${API_ENDPOINTS.reviews}/product/${productId}`);
+    const reviews = data.reviews || [];
+    document.getElementById('reviewCount').textContent = reviews.length;
+    if (reviews.length > 0) {
+      document.getElementById('reviewSummary').style.display = 'flex';
+      const avg = (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1);
+      document.getElementById('avgRatingBig').textContent = avg;
+      document.getElementById('totalReviewCount').textContent = `${reviews.length} review${reviews.length!==1?'s':''}`;
+      // Rating bars
+      const bars = [5,4,3,2,1].map(star => {
+        const cnt = reviews.filter(r=>r.rating===star).length;
+        const pct = reviews.length ? Math.round(cnt/reviews.length*100) : 0;
+        return `<div class="rating-bar-row"><span style="min-width:30px;">${star}★</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:${pct}%"></div></div><span style="min-width:28px;">${cnt}</span></div>`;
+      }).join('');
+      document.getElementById('ratingBars').innerHTML = bars;
+      document.getElementById('reviewsList').innerHTML = reviews.map(r=>`
+        <div class="review-card">
+          <div class="review-header">
+            <div>
+              <div class="reviewer-name">${r.userName || 'Customer'}</div>
+              <div>${renderStars(r.rating, 0)}</div>
+            </div>
+            <div class="review-date">${new Date(r.createdAt).toLocaleDateString('en-IN')}</div>
+          </div>
+          ${r.title?`<div class="review-title">${r.title}</div>`:''}
+          <div class="review-text">${r.text}</div>
+          ${r.verifiedPurchase?'<div class="verified-badge">✓ Verified Purchase</div>':''}
+        </div>`).join('');
+    } else {
+      document.getElementById('reviewsList').innerHTML = '<p style="color:var(--text-muted);padding:20px 0;">No reviews yet. Be the first to review!</p>';
+    }
+  } catch(e) {}
+}
+
+// Star picker
+document.querySelectorAll('.star-pick').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.getAttribute('data-val'));
+    document.querySelectorAll('.star-pick').forEach((s,i) => s.classList.toggle('active', i < selectedRating));
+  });
+});
+
+document.getElementById('submitReview')?.addEventListener('click', async () => {
+  if (!selectedRating) return showToast('Please select a rating', 'error');
+  const text = document.getElementById('reviewText').value.trim();
+  if (!text) return showToast('Please write your review', 'error');
+  try {
+    await apiRequest(API_ENDPOINTS.reviews, { method: 'POST', body: JSON.stringify({ productId, rating: selectedRating, title: document.getElementById('reviewTitle').value, text }) });
+    showToast('Review submitted!');
+    setTimeout(() => loadReviews(), 500);
+    document.getElementById('reviewText').value = '';
+    document.getElementById('reviewTitle').value = '';
+    selectedRating = 0;
+    document.querySelectorAll('.star-pick').forEach(s => s.classList.remove('active'));
+  } catch(e) { showToast(e.message || 'Failed to submit review', 'error'); }
+});
+
+document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); const q = document.getElementById('searchInput').value.trim(); if(q) window.location.href=`products.html?search=${encodeURIComponent(q)}`; });
+loadProduct();
+</script>
+</body>
+</html>

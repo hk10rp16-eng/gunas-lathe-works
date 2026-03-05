@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Browse all lathe components, welding services and custom fabrication products from Guna's Lathe Works.">
+  <title>Products | Guna's Lathe Works & Machining</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="logo"><a href="index.html">⚙ Guna's Lathe Works</a></div>
+    <form class="navbar-search" id="searchForm">
+      <input type="text" id="searchInput" placeholder="Search products..." autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="products.html" class="active">Products</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="admin/index.html" id="adminNavLink" style="display:none;color:#ffa500;">Admin</a></li>
+    </ul>
+    <div class="auth-buttons">
+      <div class="cart-icon-container" id="cartIcon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg><span id="cartCount" class="cart-count">0</span></div>
+      <a href="login.html" class="btn-auth btn-login">Login</a>
+      <a href="signup.html" class="btn-auth btn-signup">Sign Up</a>
+      <div class="user-info" style="display:none;"><span class="welcome-text">Hi, <span id="userName"></span></span><a
+          href="profile.html" class="btn-auth btn-login" style="padding:6px 12px;font-size:12px;">Orders</a><button
+          class="btn-logout" id="logoutBtn">Logout</button></div>
+    </div>
+    <div class="hamburger">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+  </nav>
+  <div class="page-content">
+    <div class="breadcrumb"><a href="index.html">Home</a><span>›</span>Products</div>
+    <div style="padding:20px 40px 0;">
+      <h1 id="pageTitle" style="font-size:22px;font-weight:800;">All Products</h1>
+      <p id="pageSubtitle" style="color:var(--text-muted);font-size:14px;margin-top:4px;"></p>
+    </div>
+    <div class="product-listing-page">
+      <!-- FILTER SIDEBAR -->
+      <aside class="filter-sidebar">
+        <div class="filter-card">
+          <div class="filter-title">Category <span class="filter-clear" id="clearFilters">Clear All</span></div>
+          <div id="categoryFilters">
+            <div class="filter-option"><input type="checkbox" id="cat1" value="Lathe Components"><label for="cat1">Lathe
+                Components</label></div>
+            <div class="filter-option"><input type="checkbox" id="cat2" value="Welding"><label
+                for="cat2">Welding</label></div>
+            <div class="filter-option"><input type="checkbox" id="cat3" value="Fabrication"><label
+                for="cat3">Fabrication</label></div>
+            <div class="filter-option"><input type="checkbox" id="cat4" value="CNC Parts"><label for="cat4">CNC
+                Parts</label></div>
+            <div class="filter-option"><input type="checkbox" id="cat5" value="Custom"><label for="cat5">Custom</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-title">Material</div>
+          <div id="materialFilters">
+            <div class="filter-option"><input type="checkbox" value="Steel" class="mat-filter"><label>Steel</label>
+            </div>
+            <div class="filter-option"><input type="checkbox" value="Bronze" class="mat-filter"><label>Bronze /
+                Brass</label></div>
+            <div class="filter-option"><input type="checkbox" value="Aluminium"
+                class="mat-filter"><label>Aluminium</label></div>
+            <div class="filter-option"><input type="checkbox" value="Stainless" class="mat-filter"><label>Stainless
+                Steel</label></div>
+          </div>
+        </div>
+      </aside>
+      <!-- PRODUCTS MAIN -->
+      <div class="products-main">
+        <div class="products-header">
+          <div class="products-count" id="productsCount">Loading products...</div>
+          <select class="sort-select" id="sortSelect">
+            <option value="">Sort: Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+            <option value="popular">Most Popular</option>
+          </select>
+        </div>
+        <div class="products-grid" id="productsGrid">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+  <script src="config.js"></script>
+  <script>
+    let currentPage = 1;
+    const params = new URLSearchParams(window.location.search);
+
+    function getFilters() {
+      const cats = [...document.querySelectorAll('#categoryFilters input:checked')].map(e => e.value);
+      const mats = [...document.querySelectorAll('.mat-filter:checked')].map(e => e.value);
+      return {
+        category: cats[0] || params.get('category') || '',
+        material: mats[0] || '',
+        sort: document.getElementById('sortSelect').value,
+        search: params.get('search') || ''
+      };
+    }
+
+    async function loadProducts(page = 1) {
+      currentPage = page;
+      const grid = document.getElementById('productsGrid');
+      grid.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+      const f = getFilters();
+
+      // Pre-select category from URL
+      if (f.category) {
+        document.querySelectorAll('#categoryFilters input').forEach(inp => {
+          if (inp.value === f.category) inp.checked = true;
+        });
+      }
+
+      try {
+        let url, data;
+        if (f.search) {
+          document.getElementById('pageTitle').textContent = `Search: "${f.search}"`;
+          url = `${API_ENDPOINTS.searchProducts}?q=${encodeURIComponent(f.search)}&page=${page}&limit=12`;
+        } else {
+          url = `${API_ENDPOINTS.products}?page=${page}&limit=12`;
+          if (f.category) url += `&category=${encodeURIComponent(f.category)}`;
+          if (f.material) url += `&material=${encodeURIComponent(f.material)}`;
+          if (f.sort) url += `&sort=${f.sort}`;
+        }
+        data = await apiRequest(url);
+        renderProducts(data.products, data.pagination);
+      } catch (e) {
+        // Fallback
+        const fallback = [
+          { _id: '1', name: 'Chicken Cage', price: 1200, images: ['Assets/cage1.jpg'], category: 'Fabrication', ratings: { average: 4.5, count: 12 }, shortDescription: 'Premium galvanized steel poultry cage.' },
+          { _id: '2', name: 'Precision Shafts', price: 850, originalPrice: 1000, images: ['Assets/shaft.jpg'], category: 'Lathe Components', ratings: { average: 4.7, count: 23 }, shortDescription: 'CNC-turned with tight tolerances.' },
+          { _id: '3', name: 'Bushings & Sleeves', price: 450, images: ['Assets/ring.png'], category: 'Lathe Components', ratings: { average: 4.3, count: 18 }, shortDescription: 'Precision-machined for bearings.' },
+          { _id: '4', name: 'Flanges & Couplings', price: 2100, images: ['Assets/coupling.png'], category: 'Fabrication', ratings: { average: 4.6, count: 9 }, shortDescription: 'Industrial-grade pipe flanges.' },
+          { _id: '5', name: 'Lathe Machine Work', price: 500, images: ['Assets/lathemachine.jpg'], category: 'Lathe Components', ratings: { average: 4.8, count: 31 }, shortDescription: 'Custom CNC lathe machining service.' },
+          { _id: '6', name: 'Welding Services', price: 300, images: ['Assets/welding.jpeg'], category: 'Welding', ratings: { average: 4.5, count: 15 }, shortDescription: 'MIG, TIG and Arc welding services.' },
+          { _id: '7', name: 'Custom Threaded Rods', price: 600, images: ['Assets/lathemachine.jpg'], category: 'Lathe Components', ratings: { average: 4.9, count: 42 }, shortDescription: 'High-tensile threaded rods.' },
+          { _id: '8', name: 'Precision Gears', price: 1500, images: ['Assets/lathemachine.jpg'], category: 'CNC Parts', ratings: { average: 4.8, count: 14 }, shortDescription: 'Custom-cut industrial gears.' },
+          { _id: '9', name: 'Machine Pulleys', price: 800, images: ['Assets/lathemachine.jpg'], category: 'Lathe Components', ratings: { average: 4.6, count: 27 }, shortDescription: 'Heavy-duty drive pulleys.' },
+          { _id: '10', name: 'Metal Spacers', price: 250, images: ['Assets/lathemachine.jpg'], category: 'Custom', ratings: { average: 4.7, count: 53 }, shortDescription: 'Precision metal spacers.' },
+          { _id: '11', name: 'Machine Belts', price: 400, images: ['Assets/lathemachine.jpg'], category: 'Lathe Components', ratings: { average: 4.5, count: 33 }, shortDescription: 'Industrial-grade rubber belts.' },
+          { _id: '12', name: 'Custom Engine Valves', price: 1800, images: ['Assets/lathemachine.jpg'], category: 'CNC Parts', ratings: { average: 4.9, count: 19 }, shortDescription: 'High-performance engine valves.' },
+          { _id: '13', name: 'Stainless Washers', price: 150, images: ['Assets/lathemachine.jpg'], category: 'Lathe Components', ratings: { average: 4.4, count: 85 }, shortDescription: 'Precision cut stainless washers.' },
+          { _id: '14', name: 'Aluminium Brackets', price: 350, images: ['Assets/lathemachine.jpg'], category: 'Fabrication', ratings: { average: 4.6, count: 41 }, shortDescription: 'Lightweight mounting brackets.' },
+          { _id: '15', name: 'Steel Handrails', price: 3200, images: ['Assets/welding.jpeg'], category: 'Welding', ratings: { average: 4.8, count: 11 }, shortDescription: 'Custom welded steel handrails.' },
+          { _id: '16', name: 'Bronze Bearings', price: 950, images: ['Assets/ring.png'], category: 'Lathe Components', ratings: { average: 4.7, count: 29 }, shortDescription: 'Durable sintered bronze bearings.' },
+          { _id: '17', name: 'Metal Pipe Fittings', price: 450, images: ['Assets/coupling.png'], category: 'Lathe Components', ratings: { average: 4.5, count: 62 }, shortDescription: 'Custom threaded pipe fittings.' },
+          { _id: '18', name: 'Heavy Duty Hinges', price: 750, images: ['Assets/lathemachine.jpg'], category: 'Fabrication', ratings: { average: 4.7, count: 38 }, shortDescription: 'Industrial load-bearing hinges.' },
+          { _id: '19', name: 'CNC Milled Enclosures', price: 2800, images: ['Assets/lathemachine.jpg'], category: 'CNC Parts', ratings: { average: 4.9, count: 8 }, shortDescription: 'Custom aluminum electronic enclosures.' },
+          { _id: '20', name: 'Grinding Services', price: 400, images: ['Assets/lathemachine.jpg'], category: 'Custom', ratings: { average: 4.6, count: 22 }, shortDescription: 'Precision surface grinding.' }
+        ];
+        renderProducts(fallback, null);
+      }
+    }
+
+    function renderProducts(products, pagination) {
+      const grid = document.getElementById('productsGrid');
+      const countEl = document.getElementById('productsCount');
+      if (!products || products.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🔍</div><h3>No products found</h3><p>Try adjusting your filters or search terms.</p></div>`;
+        countEl.textContent = '0 products found';
+        return;
+      }
+      countEl.textContent = pagination ? `${pagination.total} products found` : `${products.length} products`;
+      grid.innerHTML = products.map(p => `
+    <div class="product-card" onclick="location.href='product-detail.html?id=${p._id}'">
+      <div class="product-image">
+        <img src="${p.images && p.images[0] ? p.images[0] : 'Assets/lathemachine.jpg'}" alt="${p.name}" loading="lazy">
+        ${p.originalPrice ? '<span class="product-badge">SALE</span>' : ''}
+      </div>
+      <div class="product-content">
+        <div class="product-category">${p.category}</div>
+        <h3 class="product-title">${p.name}</h3>
+        <div class="product-rating">${renderStars(p.ratings.average, p.ratings.count)}</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.5;">${p.shortDescription || ''}</p>
+        <div class="product-price">
+          <span class="price-current">${formatCurrency(p.price)}</span>
+          ${p.originalPrice ? `<span class="price-original">${formatCurrency(p.originalPrice)}</span><span class="price-discount">${Math.round((1 - p.price / p.originalPrice) * 100)}% off</span>` : ''}
+        </div>
+        <button class="btn-add-cart" onclick="event.stopPropagation();addToCart({id:'${p._id}',name:'${p.name}',price:${p.price},image:'${p.images && p.images[0] ? p.images[0] : 'Assets/lathemachine.jpg'}',quantity:1});showToast('Added to cart!')">ADD TO CART</button>
+      </div>
+    </div>`).join('');
+
+      // Pagination
+      if (pagination && pagination.pages > 1) {
+        let pHtml = `<button class="page-btn" onclick="loadProducts(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+        for (let i = 1; i <= pagination.pages; i++) {
+          pHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="loadProducts(${i})">${i}</button>`;
+        }
+        pHtml += `<button class="page-btn" onclick="loadProducts(${currentPage + 1})" ${currentPage === pagination.pages ? 'disabled' : ''}>Next ›</button>`;
+        document.getElementById('pagination').innerHTML = pHtml;
+      }
+    }
+
+    document.getElementById('sortSelect').addEventListener('change', () => loadProducts(1));
+    document.querySelectorAll('#categoryFilters input').forEach(inp => inp.addEventListener('change', () => loadProducts(1)));
+    document.querySelectorAll('.mat-filter').forEach(inp => inp.addEventListener('change', () => loadProducts(1)));
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      document.querySelectorAll('#categoryFilters input, .mat-filter').forEach(i => i.checked = false);
+      window.history.replaceState({}, '', 'products.html');
+      loadProducts(1);
+    });
+    document.getElementById('searchForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const q = document.getElementById('searchInput').value.trim();
+      if (q) { window.history.replaceState({}, '', `?search=${encodeURIComponent(q)}`); loadProducts(1); }
+    });
+
+    loadProducts(1);
+  </script>
+</body>
+
+</html>

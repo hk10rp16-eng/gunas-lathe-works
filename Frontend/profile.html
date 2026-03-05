@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile | Guna's Lathe Works</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo"><a href="index.html">⚙ Guna's Lathe Works</a></div>
+  <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="products.html">Products</a></li><li><a href="admin/index.html" id="adminNavLink" style="display:none;color:#ffa500;">Admin</a></li></ul>
+  <div class="auth-buttons">
+    <div class="cart-icon-container" id="cartIcon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg><span id="cartCount" class="cart-count">0</span></div>
+    <div class="user-info" style="display:none;"><span class="welcome-text">Hi, <span id="userName"></span></span><button class="btn-logout" id="logoutBtn">Logout</button></div>
+  </div>
+  <div class="hamburger"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+</nav>
+<div class="page-content">
+<div class="breadcrumb"><a href="index.html">Home</a><span>›</span>My Profile</div>
+<div class="profile-page">
+  <!-- Success Banner -->
+  <div id="orderSuccessBanner" style="display:none;background:rgba(76,175,80,0.15);border:1px solid #4caf50;border-radius:var(--radius-lg);padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:16px;">
+    <div style="font-size:32px;">🎉</div>
+    <div><h3 style="color:#4caf50;margin-bottom:4px;">Order Placed Successfully!</h3><p style="font-size:13px;color:var(--text-muted);">You will receive a confirmation email shortly. Check your order below.</p></div>
+  </div>
+  <div class="profile-header">
+    <div class="profile-avatar" id="profileAvatar">U</div>
+    <div>
+      <div class="profile-name" id="profileName">Loading...</div>
+      <div class="profile-email" id="profileEmail"></div>
+      <div style="margin-top:8px;"><span class="status-badge" id="profileRole" style="background:rgba(255,165,0,0.15);color:var(--accent);">Customer</span></div>
+    </div>
+  </div>
+  <div class="orders-table-card">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:16px;font-weight:700;">📦 My Orders</h3>
+      <a href="products.html" class="btn-primary" style="font-size:13px;padding:8px 18px;">Shop More</a>
+    </div>
+    <div id="ordersContent"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  </div>
+</div>
+</div>
+<script src="config.js"></script>
+<script>
+async function init() {
+  const user = getAuthUser();
+  if (!user) { window.location.href = 'login.html?redirect=profile.html'; return; }
+
+  document.getElementById('profileName').textContent = user.name;
+  document.getElementById('profileEmail').textContent = user.email;
+  document.getElementById('profileAvatar').textContent = user.name.charAt(0).toUpperCase();
+  if (user.role === 'admin') document.getElementById('profileRole').textContent = 'Admin';
+
+  // Show success banner
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === '1') {
+    document.getElementById('orderSuccessBanner').style.display = 'flex';
+    setTimeout(() => document.getElementById('orderSuccessBanner').style.display = 'none', 5000);
+  }
+
+  try {
+    const data = await apiRequest(API_ENDPOINTS.myOrders);
+    const orders = data.orders || [];
+    if (orders.length === 0) {
+      document.getElementById('ordersContent').innerHTML = `<div class="empty-state" style="padding:40px;"><div class="empty-state-icon">📦</div><h3>No orders yet</h3><p>Your orders will appear here after you make a purchase.</p><a href="products.html" class="btn-primary" style="display:inline-block;margin-top:16px;font-size:13px;">Browse Products</a></div>`;
+      return;
+    }
+    document.getElementById('ordersContent').innerHTML = `
+      <div style="overflow-x:auto;">
+        <table class="orders-table">
+          <thead><tr><th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>${orders.map(o => `
+            <tr>
+              <td><strong style="color:var(--accent);font-size:12px;">${o.invoiceNumber}</strong></td>
+              <td>${new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
+              <td><span style="font-size:12px;">${o.items.map(i=>i.name).join(', ').substring(0,40)}${o.items.map(i=>i.name).join(', ').length>40?'...':''}</span></td>
+              <td><strong>${formatCurrency(o.totalAmount)}</strong></td>
+              <td><span style="font-size:12px;">${o.paymentMethod}</span></td>
+              <td><span class="status-badge ${o.orderStatus.toLowerCase()}">${o.orderStatus}</span></td>
+              <td>
+                <button class="btn-invoice" onclick="downloadInvoice('${o._id}')">Invoice</button>
+                ${['Pending','Processing'].includes(o.orderStatus) ? `<button class="btn-admin-action btn-delete" style="margin-left:4px;font-size:12px;padding:4px 10px;" onclick="cancelOrder('${o._id}')">Cancel</button>` : ''}
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    document.getElementById('ordersContent').innerHTML = `<div class="empty-state" style="padding:40px;"><h3>Could not load orders</h3><p>Please make sure the backend server is running.</p></div>`;
+  }
+}
+
+async function downloadInvoice(orderId) {
+  const token = localStorage.getItem('authToken');
+  try {
+    const res = await fetch(`${API_ENDPOINTS.orders}/${orderId}/invoice`, { headers: { Authorization: `Bearer ${token}` } });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Invoice-${orderId}.pdf`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) { showToast('Failed to download invoice', 'error'); }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm('Are you sure you want to cancel this order?')) return;
+  try {
+    await apiRequest(`${API_ENDPOINTS.orders}/${orderId}/cancel`, { method: 'PUT' });
+    showToast('Order cancelled successfully');
+    setTimeout(() => location.reload(), 1000);
+  } catch(e) { showToast(e.message || 'Cannot cancel order', 'error'); }
+}
+
+init();
+</script>
+</body>
+</html>

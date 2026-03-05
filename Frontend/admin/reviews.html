@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reviews | Admin</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">⚙ Admin Panel</div>
+    <nav>
+      <a class="admin-nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a>
+      <a class="admin-nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>Products</a>
+      <a class="admin-nav-item" href="orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Orders</a>
+      <a class="admin-nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Customers</a>
+      <a class="admin-nav-item active" href="reviews.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Reviews</a>
+      <a class="admin-nav-item" href="../index.html" style="margin-top:20px;border-top:1px solid var(--border);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>View Site</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-header"><h1>Reviews</h1><p>Moderate customer reviews</p></div>
+    <div class="admin-table-card">
+      <div class="admin-table-header"><h3 id="reviewsCount">All Reviews</h3></div>
+      <div style="overflow-x:auto;"><table class="admin-table">
+        <thead><tr><th>Customer</th><th>Product</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="reviewsBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+  </main>
+</div>
+<script src="../config.js"></script>
+<script>
+async function init() {
+  if (!getAuthUser() || getAuthUser().role !== 'admin') { window.location.href = '../login.html'; return; }
+  loadReviews();
+}
+async function loadReviews() {
+  try {
+    const data = await apiRequest(API_ENDPOINTS.adminReviews);
+    const reviews = data.reviews || [];
+    document.getElementById('reviewsCount').textContent = `All Reviews (${reviews.length})`;
+    document.getElementById('reviewsBody').innerHTML = reviews.length > 0
+      ? reviews.map(r => `<tr>
+          <td><strong>${r.userName || r.user?.name || 'N/A'}</strong></td>
+          <td style="font-size:12px;max-width:140px;">${r.product?.name || r.productId || '—'}</td>
+          <td><span style="color:var(--accent);font-weight:700;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span> ${r.rating}/5</td>
+          <td style="max-width:200px;"><strong style="font-size:12px;">${r.title||''}</strong><br><span style="font-size:12px;color:var(--text-muted);">${(r.text||'').substring(0,80)}${r.text?.length>80?'...':''}</span></td>
+          <td style="font-size:12px;">${new Date(r.createdAt).toLocaleDateString('en-IN')}</td>
+          <td><span class="status-badge ${r.isApproved?'delivered':'pending'}">${r.isApproved?'Approved':'Pending'}</span></td>
+          <td>
+            <button class="btn-admin-action ${r.isApproved?'btn-delete':'btn-approve'}" onclick="toggleApproval('${r._id}','${r.isApproved}')">${r.isApproved?'Unapprove':'Approve'}</button>
+            <button class="btn-admin-action btn-delete" onclick="deleteReview('${r._id}')">Delete</button>
+          </td>
+        </tr>`).join('')
+      : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">No reviews submitted yet</td></tr>';
+  } catch(e) {
+    document.getElementById('reviewsBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Could not load reviews</td></tr>';
+  }
+}
+async function toggleApproval(id) {
+  try { await apiRequest(`${API_ENDPOINTS.reviews}/admin/${id}/toggle`, { method: 'PUT' }); showToast('Review status updated'); loadReviews(); }
+  catch(e) { showToast('Failed to update review', 'error'); }
+}
+async function deleteReview(id) {
+  if (!confirm('Delete this review?')) return;
+  try { await apiRequest(`${API_ENDPOINTS.reviews}/admin/${id}`, { method: 'DELETE' }); showToast('Review deleted'); loadReviews(); }
+  catch(e) { showToast('Failed to delete review', 'error'); }
+}
+init();
+</script>
+</body>
+</html>

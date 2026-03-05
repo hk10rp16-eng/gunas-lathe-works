@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customers | Admin</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">⚙ Admin Panel</div>
+    <nav>
+      <a class="admin-nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a>
+      <a class="admin-nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>Products</a>
+      <a class="admin-nav-item" href="orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Orders</a>
+      <a class="admin-nav-item active" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Customers</a>
+      <a class="admin-nav-item" href="reviews.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Reviews</a>
+      <a class="admin-nav-item" href="../index.html" style="margin-top:20px;border-top:1px solid var(--border);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>View Site</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-header"><h1>Customers</h1><p>View all registered users</p></div>
+    <div class="admin-table-card">
+      <div class="admin-table-header"><h3 id="usersCount">All Customers</h3></div>
+      <div style="overflow-x:auto;"><table class="admin-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th><th>Status</th></tr></thead>
+        <tbody id="usersBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+  </main>
+</div>
+<script src="../config.js"></script>
+<script>
+async function init() {
+  if (!getAuthUser() || getAuthUser().role !== 'admin') { window.location.href = '../login.html'; return; }
+  try {
+    const data = await apiRequest(API_ENDPOINTS.adminUsers);
+    const users = data.users || [];
+    document.getElementById('usersCount').textContent = `All Customers (${users.length})`;
+    document.getElementById('usersBody').innerHTML = users.length > 0
+      ? users.map(u => `<tr>
+          <td><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:14px;flex-shrink:0;">${u.name.charAt(0)}</div><strong>${u.name}</strong></div></td>
+          <td>${u.email}</td>
+          <td>${u.phone || '—'}</td>
+          <td><span class="status-badge ${u.role==='admin'?'shipped':'delivered'}">${u.role}</span></td>
+          <td>${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
+          <td><span class="status-badge ${u.isActive?'delivered':'cancelled'}">${u.isActive?'Active':'Inactive'}</span></td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No users registered yet</td></tr>';
+  } catch(e) {
+    document.getElementById('usersBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Backend offline</td></tr>';
+  }
+}
+init();
+</script>
+</body>
+</html>

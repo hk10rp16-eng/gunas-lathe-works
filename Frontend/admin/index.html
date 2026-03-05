@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Guna's Lathe Works</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+body { background: var(--bg-primary); }
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">⚙ Admin Panel</div>
+    <nav>
+      <a class="admin-nav-item active" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a>
+      <a class="admin-nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>Products</a>
+      <a class="admin-nav-item" href="orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Orders</a>
+      <a class="admin-nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Customers</a>
+      <a class="admin-nav-item" href="reviews.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Reviews</a>
+      <a class="admin-nav-item" href="../index.html" style="margin-top:20px;border-top:1px solid var(--border);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>View Site</a>
+    </nav>
+  </aside>
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="admin-header">
+      <h1>Dashboard</h1>
+      <p id="welcomeText">Welcome back, Admin!</p>
+    </div>
+    <!-- Stats Cards -->
+    <div class="stats-cards" id="statsCards">
+      <div class="stat-card"><div class="stat-card-icon" style="background:rgba(255,165,0,0.15);">📦</div><div><div class="stat-card-value" id="statOrders">—</div><div class="stat-card-label">Total Orders</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon" style="background:rgba(76,175,80,0.15);">💰</div><div><div class="stat-card-value" id="statRevenue">—</div><div class="stat-card-label">Revenue</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon" style="background:rgba(33,150,243,0.15);">👥</div><div><div class="stat-card-value" id="statUsers">—</div><div class="stat-card-label">Customers</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon" style="background:rgba(156,39,176,0.15);">⚙️</div><div><div class="stat-card-value" id="statProducts">—</div><div class="stat-card-label">Products</div></div></div>
+    </div>
+    <!-- Recent Orders -->
+    <div class="admin-table-card" style="margin-bottom:20px;">
+      <div class="admin-table-header"><h3>Recent Orders</h3><a href="orders.html" style="font-size:13px;color:var(--accent);">View All</a></div>
+      <div style="overflow-x:auto;"><table class="admin-table">
+        <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="recentOrdersBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+    <!-- Popular Products -->
+    <div class="admin-table-card">
+      <div class="admin-table-header"><h3>Top Selling Products</h3></div>
+      <div style="overflow-x:auto;"><table class="admin-table">
+        <thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead>
+        <tbody id="popularBody"><tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+  </main>
+</div>
+<script src="../config.js"></script>
+<script>
+async function init() {
+  const user = getAuthUser();
+  if (!user || user.role !== 'admin') { window.location.href = '../login.html'; return; }
+  document.getElementById('welcomeText').textContent = `Welcome back, ${user.name}!`;
+  try {
+    const data = await apiRequest(API_ENDPOINTS.adminDashboard);
+    document.getElementById('statOrders').textContent = data.stats.totalOrders;
+    document.getElementById('statRevenue').textContent = formatCurrency(data.stats.revenue);
+    document.getElementById('statUsers').textContent = data.stats.totalUsers;
+    document.getElementById('statProducts').textContent = data.stats.totalProducts;
+
+    document.getElementById('recentOrdersBody').innerHTML = data.recentOrders.length > 0
+      ? data.recentOrders.map(o => `<tr>
+          <td style="color:var(--accent);font-size:12px;font-weight:700;">${o.invoiceNumber}</td>
+          <td>${o.user?.name || 'N/A'}</td>
+          <td><strong>${formatCurrency(o.totalAmount)}</strong></td>
+          <td>${o.paymentMethod}</td>
+          <td><span class="status-badge ${o.orderStatus.toLowerCase()}">${o.orderStatus}</span></td>
+          <td>${new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No orders yet</td></tr>';
+
+    document.getElementById('popularBody').innerHTML = data.popularProducts.length > 0
+      ? data.popularProducts.map(p => `<tr><td>${p._id}</td><td>${p.count}</td><td>${formatCurrency(p.revenue)}</td></tr>`).join('')
+      : '<tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted);">No sales data yet</td></tr>';
+  } catch(e) {
+    document.getElementById('recentOrdersBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted);">Could not load data. Backend may be offline.</td></tr>';
+    document.getElementById('popularBody').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted);">No data</td></tr>';
+  }
+}
+init();
+</script>
+</body>
+</html>

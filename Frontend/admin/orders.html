@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Orders | Admin</title>
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">⚙ Admin Panel</div>
+    <nav>
+      <a class="admin-nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a>
+      <a class="admin-nav-item" href="products.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>Products</a>
+      <a class="admin-nav-item active" href="orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Orders</a>
+      <a class="admin-nav-item" href="customers.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>Customers</a>
+      <a class="admin-nav-item" href="reviews.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Reviews</a>
+      <a class="admin-nav-item" href="../index.html" style="margin-top:20px;border-top:1px solid var(--border);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>View Site</a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-header"><h1>Orders</h1><p>View and manage all customer orders</p></div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <select id="statusFilter" class="sort-select" style="min-width:160px;" onchange="loadOrders()"><option value="">All Status</option><option>Pending</option><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select>
+    </div>
+    <div class="admin-table-card">
+      <div class="admin-table-header"><h3 id="ordersCount">All Orders</h3></div>
+      <div style="overflow-x:auto;"><table class="admin-table">
+        <thead><tr><th>Invoice #</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="ordersBody"><tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+  </main>
+</div>
+<!-- Status Update Modal -->
+<div class="modal-overlay hidden" id="statusModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Update Order Status</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="updateOrderId">
+      <div class="form-group"><label>Order Status</label>
+        <select id="newOrderStatus"><option>Pending</option><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select>
+      </div>
+      <div class="form-group"><label>Payment Status</label>
+        <select id="newPaymentStatus"><option>Pending</option><option>Paid</option><option>Failed</option><option>Refunded</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal()" style="padding:9px 20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);font-size:14px;cursor:pointer;">Cancel</button>
+      <button class="btn-add-product" onclick="updateStatus()">Update</button>
+    </div>
+  </div>
+</div>
+<script src="../config.js"></script>
+<script>
+async function init() {
+  if (!getAuthUser() || getAuthUser().role !== 'admin') { window.location.href = '../login.html'; return; }
+  loadOrders();
+}
+async function loadOrders() {
+  const status = document.getElementById('statusFilter').value;
+  let url = API_ENDPOINTS.adminOrders;
+  if (status) url += `?status=${encodeURIComponent(status)}`;
+  try {
+    const data = await apiRequest(url);
+    const orders = data.orders || [];
+    document.getElementById('ordersCount').textContent = `Orders (${data.total || orders.length})`;
+    document.getElementById('ordersBody').innerHTML = orders.length > 0
+      ? orders.map(o => `<tr>
+          <td style="color:var(--accent);font-size:11px;font-weight:700;">${o.invoiceNumber}</td>
+          <td><strong>${o.user?.name||'N/A'}</strong><br><span style="font-size:11px;color:var(--text-muted);">${o.user?.email||''}</span></td>
+          <td style="font-size:12px;">${o.items.map(i=>i.name).join(', ').substring(0,40)}</td>
+          <td><strong>${formatCurrency(o.totalAmount)}</strong></td>
+          <td><span style="font-size:12px;">${o.paymentMethod}<br><span class="status-badge ${o.paymentStatus==='Paid'?'delivered':'pending'}" style="font-size:10px;">${o.paymentStatus}</span></span></td>
+          <td><span class="status-badge ${o.orderStatus.toLowerCase()}">${o.orderStatus}</span></td>
+          <td style="font-size:12px;">${new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
+          <td>
+            <button class="btn-admin-action btn-edit" onclick="openUpdateModal('${o._id}','${o.orderStatus}','${o.paymentStatus}')">Update</button>
+            <button class="btn-admin-action btn-approve" onclick="downloadInvoice('${o._id}')">Invoice</button>
+          </td>
+        </tr>`).join('')
+      : '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">No orders found</td></tr>';
+  } catch(e) {
+    document.getElementById('ordersBody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">Could not load orders</td></tr>';
+  }
+}
+function openUpdateModal(id, orderStatus, paymentStatus) {
+  document.getElementById('updateOrderId').value = id;
+  document.getElementById('newOrderStatus').value = orderStatus;
+  document.getElementById('newPaymentStatus').value = paymentStatus;
+  document.getElementById('statusModal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('statusModal').classList.add('hidden'); }
+async function updateStatus() {
+  const id = document.getElementById('updateOrderId').value;
+  try {
+    await apiRequest(`${API_ENDPOINTS.adminOrders.replace('/admin/all','/admin')}/${id}/status`, { method: 'PUT', body: JSON.stringify({ orderStatus: document.getElementById('newOrderStatus').value, paymentStatus: document.getElementById('newPaymentStatus').value }) });
+    showToast('Order updated!'); closeModal(); loadOrders();
+  } catch(e) { showToast('Failed to update order', 'error'); }
+}
+async function downloadInvoice(orderId) {
+  const token = localStorage.getItem('authToken');
+  const res = await fetch(`${API_ENDPOINTS.orders}/${orderId}/invoice`, { headers: { Authorization: `Bearer ${token}` } });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `Invoice-${orderId}.pdf`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+init();
+</script>
+</body>
+</html>
